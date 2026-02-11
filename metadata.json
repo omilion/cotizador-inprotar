@@ -1,0 +1,7 @@
+{
+  "name": "Inprotar Cotizador IA",
+  "description": "Herramienta profesional de cotización con integración de IA para extracción de datos técnicos y generación de PDF para materiales eléctricos e industriales.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
