@@ -174,12 +174,12 @@ export const generateQuotePDF = async (products: Product[], info: QuoteInfo) => 
       },
       styles: { fontSize: 8, cellPadding: 4 },
       columnStyles: {
-        0: { cellWidth: 10, halign: 'center' },
-        1: { cellWidth: 100 },
+        0: { cellWidth: 8, halign: 'center' },
+        1: { cellWidth: 94 },
         2: { cellWidth: 15, halign: 'center' },
         3: { cellWidth: 15, halign: 'center' },
-        4: { cellWidth: 25, halign: 'right' },
-        5: { cellWidth: 25, halign: 'right' },
+        4: { cellWidth: 24, halign: 'right' },
+        5: { cellWidth: 24, halign: 'right' },
       }
     });
 
