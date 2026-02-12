@@ -50,7 +50,7 @@ export const extractProductInfoWithGroq = async (imageBase64: string, mimeType: 
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                model: "llava-v1.5-7b-4096-preview",
+                model: "meta-llama/llama-4-maverick-17b-128e-instruct",
                 messages: [
                     {
                         role: "user",
