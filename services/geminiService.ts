@@ -4,7 +4,8 @@ import { ExtractionResult } from "../types";
 import { extractProductInfoWithGroq } from "./groqService";
 
 export const extractProductInfo = async (imageBase64: string, mimeType: string = 'image/jpeg'): Promise<ExtractionResult> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : undefined);
+  const ai = new GoogleGenAI({ apiKey });
 
   try {
     const response = await ai.models.generateContent({
