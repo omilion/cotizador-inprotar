@@ -73,32 +73,69 @@ export const generateQuotePDF = async (products: Product[], info: QuoteInfo) => 
     doc.setFontSize(9);
     doc.text(`Fecha: ${info.date}`, 130, 37);
 
-    // 2. Información del Cliente
+    // 2. Información General (Dos Columnas)
     doc.setTextColor(0, 0, 0);
+
+    // Columna Izquierda: Datos del Cliente
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
     doc.text("DATOS DEL CLIENTE", 20, 60);
-
-    doc.setDrawColor(230, 230, 230);
-    doc.line(20, 62, 190, 62);
+    doc.setDrawColor(37, 99, 235); // Blue
+    doc.line(20, 62, 90, 62);
 
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
-    let y = 72;
-    const drawField = (label: string, value: string, x: number) => {
+    let yLeft = 70;
+    const drawLeftField = (label: string, value: string) => {
       doc.setFont("helvetica", "bold");
-      doc.text(label, x, y);
+      doc.text(label, 20, yLeft);
       doc.setFont("helvetica", "normal");
-      doc.text(value || 'N/A', x + 30, y);
+      doc.text(value || 'N/A', 50, yLeft);
+      yLeft += 6;
     };
 
-    drawField("CONTACTO:", info.customerName, 20);
-    drawField("RUT:", info.customerRut, 120);
-    y += 7;
-    drawField("EMPRESA:", info.customerCompany, 20);
-    drawField("GIRO:", info.customerGiro, 120);
-    y += 7;
-    drawField("EMAIL:", info.customerEmail, 20);
+    drawLeftField("CONTACTO:", info.customerName);
+    drawLeftField("EMPRESA:", info.customerCompany);
+    drawLeftField("RUT:", info.customerRut);
+    drawLeftField("GIRO:", info.customerGiro);
+    drawLeftField("EMAIL:", info.customerEmail);
+    drawLeftField("TELÉFONO:", info.customerPhone);
+
+
+    // Columna Derecha: Contacto Inprotar
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text("CONTACTO COMERCIAL", 120, 60);
+    doc.line(120, 62, 190, 62);
+
+    doc.setFontSize(9);
+    let yRight = 70;
+
+    doc.setFont("helvetica", "bold");
+    doc.text("EJECUTIVO:", 120, yRight);
+    doc.setFont("helvetica", "normal");
+    doc.text("Enzo Tardones", 150, yRight); // Fixed Executive
+    yRight += 6;
+
+    doc.setFont("helvetica", "bold");
+    doc.text("EMAIL:", 120, yRight);
+    doc.setFont("helvetica", "normal");
+    doc.text("info@inprotar.cl", 150, yRight);
+    yRight += 6;
+
+    doc.setFont("helvetica", "bold");
+    doc.text("TELÉFONO:", 120, yRight);
+    doc.setFont("helvetica", "normal");
+    doc.text("+56 9 9089 4601", 150, yRight);
+    yRight += 6;
+
+    doc.setFont("helvetica", "bold");
+    doc.text("WEB:", 120, yRight);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(37, 99, 235);
+    doc.text("www.inprotar.cl", 150, yRight);
+    doc.setTextColor(0, 0, 0);
+
 
     // 3. Tabla de Productos
     const tableRows = products.map((p, idx) => {
@@ -106,22 +143,26 @@ export const generateQuotePDF = async (products: Product[], info: QuoteInfo) => 
         ? '[Entrega Inmediata]'
         : `[Importación: ${p.deliveryDays} días hábiles]`;
 
+      const descriptionContent = p.description || p.name;
+      const codeOrTitle = (p as any).sku || p.name;
+      const contentText = `Código: ${codeOrTitle}\n${descriptionContent}\n${deliveryText}`;
+
       return [
         idx + 1,
         {
-          content: `${p.name}\n${p.description}\n${deliveryText}\nMarca: ${p.brand}`,
-          styles: { fontStyle: 'bold' }
+          content: contentText,
+          styles: { fontStyle: 'bold' as 'bold' }
         },
         p.quantity,
-        unitLabels[p.unit],
+        unitLabels[p.unit] || p.unit,
         `$${(p.netPrice || 0).toLocaleString('es-CL')}`,
         `$${(p.quantity * (p.netPrice || 0)).toLocaleString('es-CL')}`
       ];
     });
 
     autoTable(doc, {
-      startY: 100,
-      head: [['#', 'Descripción Técnica / Logística', 'Cant.', 'Unid.', 'Precio Unit.', 'Subtotal']],
+      startY: 110, // Increased Y to accommodate headers
+      head: [['#', 'Código / Descripción', 'Cant.', 'Unid.', 'Precio Unit.', 'Subtotal']],
       body: tableRows,
       theme: 'grid',
       headStyles: {
@@ -129,16 +170,16 @@ export const generateQuotePDF = async (products: Product[], info: QuoteInfo) => 
         textColor: 255,
         fontSize: 9,
         halign: 'center',
-        fontStyle: 'bold'
+        fontStyle: 'bold' as 'bold'
       },
       styles: { fontSize: 8, cellPadding: 4 },
       columnStyles: {
         0: { cellWidth: 10, halign: 'center' },
-        1: { cellWidth: 80 },
+        1: { cellWidth: 100 },
         2: { cellWidth: 15, halign: 'center' },
         3: { cellWidth: 15, halign: 'center' },
-        4: { cellWidth: 35, halign: 'right' },
-        5: { cellWidth: 35, halign: 'right' },
+        4: { cellWidth: 25, halign: 'right' },
+        5: { cellWidth: 25, halign: 'right' },
       }
     });
 
@@ -173,32 +214,24 @@ export const generateQuotePDF = async (products: Product[], info: QuoteInfo) => 
     doc.setFont("helvetica", "bold");
     doc.text(`$${total.toLocaleString('es-CL')}`, 190, finalY + 23, { align: 'right' });
 
-    // 5. Pie de Página con Datos Corporativos de Inprotar
+    // 5. Pie de Página con Datos Formales (Abajo del todo)
     const pageHeight = doc.internal.pageSize.getHeight();
     doc.setDrawColor(accentColor[0], accentColor[1], accentColor[2]);
-    doc.line(20, pageHeight - 45, 190, pageHeight - 45);
+    doc.line(20, pageHeight - 35, 190, pageHeight - 35); // Separator line
 
     doc.setFontSize(8);
     doc.setTextColor(50, 50, 50);
     doc.setFont("helvetica", "bold");
-    doc.text("DATOS DE FACTURACIÓN Y CONTACTO - INPROTAR", 20, pageHeight - 40);
+    doc.text("INPROTAR - Soluciones Eléctricas e Industriales", 105, pageHeight - 28, { align: 'center' });
 
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(7.5);
-    doc.text("Razón Social: COMERCIALIZADORA DE BIENES Y SERVICIOS TARDONES SPA", 20, pageHeight - 34);
-    doc.text("RUT: 77.223.082 - 6", 20, pageHeight - 30);
-    doc.text("Domicilio: CAMINO DEL PARQUE 425 LT 84 PORTAL CHAMISERO", 20, pageHeight - 26);
-
-    doc.text("Correo Electrónico: info@inprotar.cl", 130, pageHeight - 34);
-    doc.text("Teléfono: +56 9 9089 4601", 130, pageHeight - 30);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(accentColor[0], accentColor[1], accentColor[2]);
-    doc.text("Web: www.inprotar.cl", 130, pageHeight - 26);
-
     doc.setFontSize(7);
-    doc.setTextColor(150, 150, 150);
+    doc.setTextColor(100, 100, 100);
+    doc.text("Razón Social: COMERCIALIZADORA DE BIENES Y SERVICIOS TARDONES SPA | RUT: 77.223.082-6", 105, pageHeight - 22, { align: 'center' });
+    doc.text("Domicilio: CAMINO DEL PARQUE 425 LT 84 PORTAL CHAMISERO", 105, pageHeight - 18, { align: 'center' });
+
     doc.setFont("helvetica", "italic");
-    doc.text("Validez de la cotización: 15 días corridos. Precios netos sujetos a IVA.", 105, pageHeight - 15, { align: 'center' });
+    doc.text("Validez de la cotización: 15 días corridos. Precios netos sujetos a IVA.", 105, pageHeight - 12, { align: 'center' });
 
     doc.save(`Cotizacion_Inprotar_${info.quoteNumber}.pdf`);
   } catch (error) {
