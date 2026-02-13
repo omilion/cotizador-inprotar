@@ -19,21 +19,25 @@ export const extractProductInfo = async (imageBase64: string, mimeType: string =
             },
           },
           {
-            text: `Analiza este documento o imagen de Inprotar (insumos eléctricos/industriales). 
-              Tu objetivo es extraer ABSOLUTAMENTE TODOS los productos listados, sin omitir ninguno.
+            text: `ACT AS A DATA EXTRACTION ENGINE. DO NOT INVENT TEXT.
+              Analyze this document or image from Inprotar (electrical/industrial supplies).
               
-              REGLAS CRÍTICAS DE EXTRACCIÓN:
-              1. EXHAUSTIVIDAD: Si hay 10 ítems en el documento, debes extraer 10 productos. No resumas.
-              2. MARCA: Siempre "INPROTAR".
-              3. NOMBRE (IMPORTANTE): Debe ser CORTO y preciso. Solo Modelo o Código (ej. "Cable SHD-GC 5kV"). NO incluyas especificaciones aquí.
-              4. DESCRIPCIÓN (IMPORTANTE): Aquí pon TODO el resto del texto. Formato: "{Tipo} Marca INPROTAR {Especificaciones completas}". Un solo párrafo.
-              5. CATEGORÍA: Clasifica el producto (Cables, Control, Iluminación, etc).
+              CRITICAL RULES:
+              1. EXTRACTION MUST BE EXACT: Copy technical specifications VERBATIM from the document. Do not "interpret" or "improve" descriptions.
+              2. EXHAUSTIVENESS: You must extract EVERY SINGLE ITEM listed in the table or list. If there are 50 items, extract 50 items.
+              3. NO HALLUCINATIONS: If a value is missing, leave it empty or null. DO NOT INVENT DATA.
+              4. NAME: Keep it SHORT (Model/Code only). Example: "Cable SHD-GC 5kV".
+              5. DESCRIPTION: Combine all other details (Type, Specs, Dimensions) into a single string.
+              6. BRAND: Always "INPROTAR" unless another brand is explicitly visible.
+              7. CATEGORY: Classify based on the item (Cables, Control, Lighting, etc).
               
-              Responde estrictamente en JSON.`
+              Return strictly JSON.`
           }
         ],
       },
       config: {
+        temperature: 0, // CRITICAL: Zero creativity to prevent hallucinations
+        topK: 40,
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
