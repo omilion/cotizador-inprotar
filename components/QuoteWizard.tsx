@@ -515,7 +515,7 @@ const QuoteWizard: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                                 <h3 className="text-2xl font-black mb-2 truncate">{stagedFile.name}</h3>
                                 <div className="grid grid-cols-2 gap-4 mt-8">
                                     <button onClick={() => setStagedFile(null)} className="py-4 rounded-xl font-black uppercase tracking-widest text-xs bg-white/10 hover:bg-white/20">Cancelar</button>
-                                    <button onClick={handleIAAnalysis} className="py-4 rounded-xl font-black uppercase tracking-widest text-xs bg-blue-500 hover:bg-blue-400 shadow-lg shadow-blue-500/50">Procesar con IA</button>
+                                    <button onClick={handleIAAnalysis} disabled={loading} className="py-4 rounded-xl font-black uppercase tracking-widest text-xs bg-blue-500 hover:bg-blue-400 shadow-lg shadow-blue-500/50 disabled:opacity-50 disabled:cursor-not-allowed">Procesar con IA</button>
                                 </div>
                             </div>
                         )}
