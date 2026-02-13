@@ -1,43 +1,37 @@
 
 import { ExtractionResult } from "../types";
 
-const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+const GROQ_API_URL = "https://api.mistral.ai/v1/chat/completions"; // Using Mistral as Fallback
 
 export const extractProductInfoWithGroq = async (imageBase64: string, mimeType: string = 'image/jpeg'): Promise<ExtractionResult> => {
-    const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+    // We reuse the existing VITE_GROQ_API_KEY variable so you don't have to change code everywhere, 
+    // BUT the value in Vercel/env must be your MISTRAL API KEY.
+    const apiKey = import.meta.env.VITE_GROQ_API_KEY || import.meta.env.VITE_MISTRAL_API_KEY;
 
     if (!apiKey) {
-        console.error("GROQ API Key missing");
-        throw new Error("GROQ API Key missing");
+        console.error("Mistral API Key missing");
+        throw new Error("Mistral API Key missing");
     }
 
-    // Ensure base64 header is present for Groq if needed, or just data.
-    // OpenAI/Groq usually expects "data:image/jpeg;base64,{DATA}" or just the url if hosted.
-    // Since we have raw base64 data (maybe with or without header from the reader), let's ensure it's a data URL.
+    // Ensure base64 header is present for Mistral if needed, or just data.
+    // Mistral Pixtral expects standard OpenAI format with data URLs.
     const dataUrl = imageBase64.startsWith('data:') ? imageBase64 : `data:${mimeType};base64,${imageBase64}`;
 
     const prompt = `
-    Analiza este documento o imagen de Inprotar (insumos eléctricos/industriales). 
+    Analiza este documento o imagen de Inprotar. 
     Tu objetivo es extraer ABSOLUTAMENTE TODOS los productos listados.
     
     REGLAS:
     1. MARCA: Siempre "INPROTAR".
-    2. NOMBRE: Corto y preciso (Modelo/Código).
-    3. DESCRIPCIÓN: Todo el detalle técnico.
+    2. NOMBRE: Corto y preciso.
+    3. DESCRIPCIÓN: Detalle técnico completo.
     4. CATEGORÍA: Clasifica el producto.
     
-    Responde SOLAMENTE con un JSON válido con esta estructura exacta, sin markdown ni explicaciones:
+    Responde SOLAMENTE con un JSON válido con esta estructura:
     {
       "multipleModelsFound": boolean,
       "products": [
-        {
-          "name": string,
-          "brand": "INPROTAR",
-          "description": string,
-          "suggestedUnit": "u" | "m" | "kg",
-          "specDetails": string,
-          "category": string
-        }
+        { "name": string, "brand": "INPROTAR", "description": string, "suggestedUnit": "u", "specDetails": string, "category": string }
       ]
     }
     `;
@@ -50,7 +44,7 @@ export const extractProductInfoWithGroq = async (imageBase64: string, mimeType: 
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                model: "llama-3.2-90b-vision-preview",
+                model: "pixtral-12b-2409", // Mistral's Vision Model
                 messages: [
                     {
                         role: "user",
@@ -67,18 +61,21 @@ export const extractProductInfoWithGroq = async (imageBase64: string, mimeType: 
 
         if (!response.ok) {
             const err = await response.text();
-            throw new Error(`Groq API Error: ${err}`);
+            throw new Error(`Mistral API Error: ${err}`);
         }
 
         const data = await response.json();
         const content = data.choices[0]?.message?.content;
 
-        if (!content) throw new Error("No content from Groq");
+        if (!content) throw new Error("No content from Mistral");
 
-        return JSON.parse(content) as ExtractionResult;
+        // Clean content if it has markdown code blocks
+        const cleanContent = content.replace(/```json/g, '').replace(/```/g, '').trim();
+
+        return JSON.parse(cleanContent) as ExtractionResult;
 
     } catch (error) {
-        console.error("Error in Groq extraction:", error);
+        console.error("Error in Mistral extraction:", error);
         throw error;
     }
 };
