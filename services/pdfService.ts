@@ -222,7 +222,7 @@ export const generateQuotePDF = async (products: Product[], info: QuoteInfo) => 
     doc.text(`$${total.toLocaleString('es-CL')}`, 190, finalY + 23, { align: 'right' });
 
     // 5. Pie de Página con Datos Formales (Abajo del todo)
-    const pageHeight = doc.internal.pageSize.getHeight();
+    // pageHeight is already defined above
     doc.setDrawColor(accentColor[0], accentColor[1], accentColor[2]);
     doc.line(20, pageHeight - 35, 190, pageHeight - 35); // Separator line
 
