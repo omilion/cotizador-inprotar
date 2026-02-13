@@ -19,24 +19,31 @@ export const extractProductInfo = async (imageBase64: string, mimeType: string =
             },
           },
           {
-            text: `ACT AS A DATA EXTRACTION ENGINE. DO NOT INVENT TEXT.
-              Analyze this document or image from Inprotar (electrical/industrial supplies).
+            text: `SYSTEM ROLE: You are a rigorous Data Extraction Engine.
+              TASK: Extract product line items from this document (Quote/Invoice/Spec Sheet).
               
-              CRITICAL RULES:
-              1. EXTRACTION MUST BE EXACT: Copy technical specifications VERBATIM from the document. Do not "interpret" or "improve" descriptions.
-              2. EXHAUSTIVENESS: You must extract EVERY SINGLE ITEM listed in the table or list. If there are 50 items, extract 50 items.
-              3. NO HALLUCINATIONS: If a value is missing, leave it empty or null. DO NOT INVENT DATA.
-              4. NAME: Keep it SHORT (Model/Code only). Example: "Cable SHD-GC 5kV".
-              5. DESCRIPTION: Combine all other details (Type, Specs, Dimensions) into a single string.
-              6. BRAND: Always "INPROTAR" unless another brand is explicitly visible.
-              7. CATEGORY: Classify based on the item (Cables, Control, Lighting, etc).
+              CRITICAL INSTRUCTIONS:
+              1. **IDENTIFY THE MAIN PRODUCT TABLE**: Look for a table with columns like "Item", "Cant", "Descripción", "Precio", etc.
+              2. **ROW-BY-ROW EXTRACTION**: Extract EVERY single row in that table as a separate product. Do not skip any rows.
+              3. **VERBATIM TRANSCRIPTION**: Copy the description text EXACTLY as it appears in the row. Do not summarize, do not rephrase, and do not invent specs.
+              5. **BRAND**: Always "INPROTAR".
+              6. **DESCRIPTION FORMAT**:
+                 The description MUST follow this EXACT pattern:
+                 "{Product Type} Marca INPROTAR {Technical Specs (Verbatim)}"
+                 
+                 Example: "Cable Minero Marca INPROTAR 3x50mm2 SHD-GC 15kV"
+                 
+                 - {Product Type}: Use the generic name (e.g., Cable, Conector, Luminaria).
+                 - {Technical Specs}: The technical details from the row.
               
-              Return strictly JSON.`
+              7. **NAME**: Keep it SHORT (Model/Code only). Example: "SHD-GC".
+              
+              OUTPUT FORMAT: JSON only.`
           }
         ],
       },
       config: {
-        temperature: 0, // CRITICAL: Zero creativity to prevent hallucinations
+        temperature: 0,
         topK: 40,
         responseMimeType: "application/json",
         responseSchema: {
@@ -61,7 +68,7 @@ export const extractProductInfo = async (imageBase64: string, mimeType: string =
           },
           required: ["multipleModelsFound", "products"],
         },
-      },
+      }
     });
 
     const text = response.text;
