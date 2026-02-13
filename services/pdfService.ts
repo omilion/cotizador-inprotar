@@ -184,7 +184,14 @@ export const generateQuotePDF = async (products: Product[], info: QuoteInfo) => 
     });
 
     // 4. Resumen de Totales
-    const finalY = (doc as any).lastAutoTable.finalY + 15;
+    // Check if we have space for the totals block (approx 40 units) before the footer (starts at pageHeight - 40)
+    let finalY = (doc as any).lastAutoTable.finalY + 15;
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    if (finalY > pageHeight - 50) {
+      doc.addPage();
+      finalY = 20; // Reset to top of new page
+    }
     const netTotal = products.reduce((sum, p) => sum + (p.quantity * (p.netPrice || 0)), 0);
     const iva = netTotal * info.ivaRate;
     const total = netTotal + iva;

@@ -25,16 +25,17 @@ export const extractProductInfo = async (imageBase64: string, mimeType: string =
               CRITICAL INSTRUCTIONS:
               1. **IDENTIFY THE MAIN PRODUCT TABLE**: Look for a table with columns like "Item", "Cant", "Descripción", "Precio", etc.
               2. **ROW-BY-ROW EXTRACTION**: Extract EVERY single row in that table as a separate product. Do not skip any rows.
-              3. **VERBATIM TRANSCRIPTION**: Copy the description text EXACTLY as it appears in the row. Do not summarize, do not rephrase, and do not invent specs.
+              3. **COMPREHENSIVE EXTRACTION**: Extract ALL technical details found in the row. Do not leave anything out. If specs are in multiple columns, combine them.
               5. **BRAND**: Always "INPROTAR".
               6. **DESCRIPTION FORMAT**:
                  The description MUST follow this EXACT pattern:
-                 "{Product Type} Marca INPROTAR {Technical Specs (Verbatim)}"
+                 "{Product Type} Marca INPROTAR {Technical Specs}"
                  
-                 Example: "Cable Minero Marca INPROTAR 3x50mm2 SHD-GC 15kV"
+                 Example: "Cable Minero Marca INPROTAR 3x50mm2 SHD-GC 15kV Jacket TPU Reforzado"
                  
                  - {Product Type}: Use the generic name (e.g., Cable, Conector, Luminaria).
-                 - {Technical Specs}: The technical details from the row.
+                 - {Technical Specs}: INCLUDE ALL DETAILS: Voltage, Dimensions, Materials, Colors, IP Ratings, Cat codes. 
+                   **IMPORTANT**: Make the description rich and complete. Do not truncate.
               
               7. **NAME**: Keep it SHORT (Model/Code only). Example: "SHD-GC".
               
