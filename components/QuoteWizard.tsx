@@ -94,43 +94,19 @@ const QuoteWizard: React.FC<{ onExit: () => void }> = ({ onExit }) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // If it's a PDF, render first page as Image for Groq compatibility
+        // CRITICAL: Keep PDF as native "application/pdf" for Gemini.
+        // Do NOT convert to Image here. Gemini can read the text layer directly.
+        // Fallback to Image conversion happens in groqService if needed.
         if (file.type === 'application/pdf') {
             const reader = new FileReader();
-            reader.onload = async (event) => {
-                try {
-                    const typedarray = new Uint8Array(event.target?.result as ArrayBuffer);
-                    // @ts-ignore - pdfjsLib is global from CDN
-                    const pdf = await window.pdfjsLib.getDocument(typedarray).promise;
-                    const page = await pdf.getPage(1);
-
-                    const scale = 1.5; // Good resolution for OCR
-                    const viewport = page.getViewport({ scale });
-
-                    const canvas = document.createElement('canvas');
-                    const context = canvas.getContext('2d');
-                    canvas.height = viewport.height;
-                    canvas.width = viewport.width;
-
-                    const renderContext = {
-                        canvasContext: context,
-                        viewport: viewport
-                    };
-                    await page.render(renderContext).promise;
-
-                    const imgData = canvas.toDataURL('image/jpeg', 0.8);
-
-                    setStagedFile({
-                        data: imgData,
-                        type: 'image/jpeg', // We converted PDF to JPEG!
-                        name: file.name
-                    });
-                } catch (err) {
-                    console.error("Error rendering PDF:", err);
-                    alert("Error al procesar PDF para IA. Intenta subir una imagen.");
-                }
+            reader.onload = (event) => {
+                setStagedFile({
+                    data: event.target?.result as string,
+                    type: 'application/pdf',
+                    name: file.name
+                });
             };
-            reader.readAsArrayBuffer(file); // Important: Read as ArrayBuffer for PDF.js
+            reader.readAsDataURL(file); // Keep as DataURL
             return;
         }
 
