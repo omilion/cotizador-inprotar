@@ -61,8 +61,7 @@ export const extractProductInfoWithGroq = async (imageBase64: string, mimeType: 
                     }
                 ],
                 temperature: 0.1,
-                max_tokens: 4096,
-                response_format: { type: "json_object" } // Force JSON
+                max_tokens: 4096
             })
         });
 
