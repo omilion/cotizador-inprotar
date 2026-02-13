@@ -93,13 +93,84 @@ const QuoteWizard: React.FC<{ onExit: () => void }> = ({ onExit }) => {
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
+
+        // If it's a PDF, render first page as Image for Groq compatibility
+        if (file.type === 'application/pdf') {
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                try {
+                    const typedarray = new Uint8Array(event.target?.result as ArrayBuffer);
+                    // @ts-ignore - pdfjsLib is global from CDN
+                    const pdf = await window.pdfjsLib.getDocument(typedarray).promise;
+                    const page = await pdf.getPage(1);
+
+                    const scale = 1.5; // Good resolution for OCR
+                    const viewport = page.getViewport({ scale });
+
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+
+                    const renderContext = {
+                        canvasContext: context,
+                        viewport: viewport
+                    };
+                    await page.render(renderContext).promise;
+
+                    const imgData = canvas.toDataURL('image/jpeg', 0.8);
+
+                    setStagedFile({
+                        data: imgData,
+                        type: 'image/jpeg', // We converted PDF to JPEG!
+                        name: file.name
+                    });
+                } catch (err) {
+                    console.error("Error rendering PDF:", err);
+                    alert("Error al procesar PDF para IA. Intenta subir una imagen.");
+                }
+            };
+            reader.readAsArrayBuffer(file); // Important: Read as ArrayBuffer for PDF.js
+            return;
+        }
+
+        // If Image, Resize it to avoid token limits / invalid data errors
         const reader = new FileReader();
         reader.onload = (event) => {
-            setStagedFile({
-                data: event.target?.result as string,
-                type: file.type,
-                name: file.name
-            });
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                const MAX_DIM = 1200; // Resize to max 1200px
+
+                if (width > height) {
+                    if (width > MAX_DIM) {
+                        height *= MAX_DIM / width;
+                        width = MAX_DIM;
+                    }
+                } else {
+                    if (height > MAX_DIM) {
+                        width *= MAX_DIM / height;
+                        height = MAX_DIM;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx?.drawImage(img, 0, 0, width, height);
+
+                // Convert to JPEG with 0.8 quality
+                const optimizedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+
+                setStagedFile({
+                    data: optimizedDataUrl,
+                    type: 'image/jpeg', // Force JPEG for consistency
+                    name: file.name
+                });
+            };
+            img.src = event.target?.result as string;
         };
         reader.readAsDataURL(file);
         e.target.value = '';
