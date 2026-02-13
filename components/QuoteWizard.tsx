@@ -804,9 +804,9 @@ const QuoteWizard: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                                     {products.map((p) => (
                                         <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
                                             <td className="px-8 py-6">
-                                                <p className="font-bold text-slate-900">{p.name}</p>
-                                                {p.description && p.description.trim() !== p.name.trim() && (
-                                                    <p className="text-xs text-slate-400 mt-1">{p.description}</p>
+                                                <p className="text-xs text-slate-400 mb-1">{p.name}</p>
+                                                {p.description && (
+                                                    <p className="font-bold text-slate-800 text-sm leading-relaxed">{p.description}</p>
                                                 )}
                                             </td>
                                             <td className="px-8 py-6 text-center font-bold text-slate-600">{p.quantity}</td>
